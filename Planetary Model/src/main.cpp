@@ -1,6 +1,8 @@
 /****
 	Project created by Immortality (6/14/20)
 	skybox: https://opengameart.org/content/galaxy-skybox
+	Textures: https://www.solarsystemscope.com/textures/
+
 ****/
 
 #include <iostream>
@@ -16,10 +18,12 @@
 #include "stb_image.h"
 
 #include "Shader.h"
-#include "Camera.h"
+#include "OrbitCamera.h"
 
-const int WIDTH = 800;
-const int HEIGHT = 600;
+#define PI 3.14159
+
+const int WIDTH = 1920;
+const int HEIGHT = 1080;
 
 void setCallbacks(GLFWwindow* window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -29,7 +33,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 GLuint loadCubemap(std::vector<std::string> faces);
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+OrbitCamera camera;
 float lastX = WIDTH / 2.0f;
 float lastY = HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -55,7 +59,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Planetary Model", 
-		nullptr, nullptr);
+		glfwGetPrimaryMonitor(), nullptr);
 
 	if (window == nullptr)
 	{
@@ -64,6 +68,7 @@ int main()
 		return -1;
 	}
 	glfwMakeContextCurrent(window);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	setCallbacks(window); //setup glfw window callbacks
 
 	if (glewInit() != GLEW_OK)
@@ -85,6 +90,12 @@ int main()
 
 	GLuint skyboxTexture = loadCubemap(faces);
 	glEnable(GL_DEPTH_TEST);
+
+#pragma region SPHERE
+
+	
+#pragma endregion SPHERE
+
 
 	float skyboxVertices[] = {
 		// positions          
@@ -184,20 +195,10 @@ int main()
 
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		glDepthMask(GL_FALSE);
-		skyboxShader.use();
-		glm::mat4 view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+		
+		glm::mat4 view = camera.GetViewMatrix();
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
-		skyboxShader.setMat4("view", view);
-		skyboxShader.setMat4("projection", projection);
-		glBindVertexArray(skyboxVAO);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glDepthMask(GL_TRUE);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-		view = camera.GetViewMatrix();
-
+		
 		planetShader.use();
 
 		glm::mat4 model = glm::mat4(1.0);
@@ -207,6 +208,20 @@ int main()
 		glBindVertexArray(planetVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindVertexArray(0);
+
+		glDepthFunc(GL_LEQUAL);
+		skyboxShader.use();
+		view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+		
+		skyboxShader.setMat4("view", view);
+		skyboxShader.setMat4("projection", projection);
+		glBindVertexArray(skyboxVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDepthFunc(GL_LESS);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -235,15 +250,6 @@ void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
-
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera.ProcessKeyboard(FORWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera.ProcessKeyboard(BACKWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camera.ProcessKeyboard(LEFT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
