@@ -1,8 +1,8 @@
 /****
 	Project created by Immortality (6/14/20)
 	skybox: https://opengameart.org/content/galaxy-skybox
-	Textures: https://www.solarsystemscope.com/textures/
-
+	Textures: https://www.solarsystemscope.com/textures/,
+	https://www.universetoday.com/wp-content/uploads/2013/10/milky_way.jpg
 ****/
 
 #include <iostream>
@@ -19,11 +19,13 @@
 
 #include "Shader.h"
 #include "OrbitCamera.h"
+#include "Model.h"
 
 #define PI 3.14159
+#define CONFIG_FILE "config.ini"
 
-const int WIDTH = 1920;
-const int HEIGHT = 1080;
+const int WIDTH = 800;
+const int HEIGHT = 600;
 
 void setCallbacks(GLFWwindow* window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -58,8 +60,8 @@ int main()
 #ifdef __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Planetary Model", 
-		glfwGetPrimaryMonitor(), nullptr);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Solar System", 
+		nullptr, nullptr);
 
 	if (window == nullptr)
 	{
@@ -185,6 +187,8 @@ int main()
 	Shader skyboxShader("res/shader/skybox.vs", "res/shader/skybox.fs");
 	Shader planetShader("res/shader/planetVertex.glsl", "res/shader/planetFragment.glsl");
 
+	Model ourModel("res/img/sphere.obj");
+
 	while (!glfwWindowShouldClose(window))
 	{
 		float currentFrame = glfwGetTime();
@@ -205,9 +209,14 @@ int main()
 		planetShader.setMat4("model", model);
 		planetShader.setMat4("view", view);
 		planetShader.setMat4("projection", projection);
+		ourModel.Draw(planetShader);
+
+		/*planetShader.setMat4("model", model);
+		planetShader.setMat4("view", view);
+		planetShader.setMat4("projection", projection);
 		glBindVertexArray(planetVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
-		glBindVertexArray(0);
+		glBindVertexArray(0);*/
 
 		glDepthFunc(GL_LEQUAL);
 		skyboxShader.use();
@@ -221,7 +230,6 @@ int main()
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glDepthFunc(GL_LESS);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
