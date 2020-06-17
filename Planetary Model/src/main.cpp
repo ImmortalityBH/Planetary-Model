@@ -7,6 +7,8 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
+#include <fstream>
 
 #include <gl/glew.h>
 #include <GLFW/glfw3.h>
@@ -24,9 +26,11 @@
 #define PI 3.14159
 #define CONFIG_FILE "config.ini"
 
-const int WIDTH = 800;
-const int HEIGHT = 600;
+int WIDTH = 0;
+int HEIGHT = 0;
+bool isFullscreen;
 
+void load_config(bool& fullscreen, int& width, int& height);
 void setCallbacks(GLFWwindow* window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -48,6 +52,8 @@ int main()
 {
 #pragma region INITIALIZATION
 
+	load_config(isFullscreen, WIDTH, HEIGHT);
+
 	if (!glfwInit())
 	{
 		std::cerr << "GLFW Init failed!" << std::endl;
@@ -60,8 +66,17 @@ int main()
 #ifdef __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Solar System", 
-		nullptr, nullptr);
+	GLFWwindow* window;
+	if (isFullscreen == true)
+	{
+		window = glfwCreateWindow(WIDTH, HEIGHT, "Solar System",
+			glfwGetPrimaryMonitor(), nullptr);
+	}
+	else
+	{
+		window = glfwCreateWindow(WIDTH, HEIGHT, "Solar System",
+			nullptr, nullptr);
+	}
 
 	if (window == nullptr)
 	{
@@ -87,12 +102,13 @@ int main()
 		stbi_image_free(images[0].pixels);
 	}
 	
-
-	if (glewInit() != GLEW_OK)
+	GLenum err = glewInit(); //glewInit returns glenum
+	if (GLEW_OK != err)
 	{
-		std::cerr << "Failed to init GLEW!" << std::endl;
+		std::cerr << "GLEW ERROR: " << glewGetErrorString(err) << "\n";
 		return -1;
 	}
+	glViewport(0, 0, WIDTH, HEIGHT);
 #pragma endregion INITIALIZATION
 
 	std::vector<std::string> faces =
@@ -352,12 +368,64 @@ int main()
 
 	return 0;
 }
+
+void load_config(bool& fullscreen, int& width, int& height)
+{
+	std::ifstream file;
+	std::string line;
+
+	try
+	{
+		file.open(CONFIG_FILE);
+		if (!file.is_open())
+			throw std::ios::failure("The config.ini file has been misplaced. Please reinstall the application.");
+		
+		int index = 1;
+		while (std::getline(file, line))
+		{
+			switch (index)
+			{
+			case 2:
+			{
+				int boolInt = std::stoi(line);
+				if (boolInt == 0)
+					fullscreen = false;
+				else
+					fullscreen = true;
+			}
+				break;
+			case 4:
+				width = std::stoi(line);
+				break;
+			case 6:
+				height = std::stoi(line);
+				break;
+			}
+			index++;
+		}
+		file.close();
+	}
+	catch (const std::exception & e)
+	{
+		std::cerr << e.what() << std::endl;
+	}
+	catch (std::invalid_argument const& e)
+	{
+		std::cerr << "(INFILE)Bad input: std::invalid_argument thrown" << '\n';
+	}
+	catch (std::out_of_range const& e)
+	{
+		std::cerr << "(INFILE_Integer overflow: std::out_of_range thrown" << '\n';
+	}
+}
+
 void setCallbacks(GLFWwindow* window)
 {
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 }
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -367,6 +435,12 @@ void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
@@ -401,6 +475,7 @@ GLuint loadCubemap(std::vector<std::string> faces)
 	int width, height, nrChannels;
 	for (unsigned int i = 0; i < faces.size(); i++)
 	{
+		//stbi_set_flip_vertically_on_load(true);
 		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
 		if (data)
 		{
@@ -419,6 +494,6 @@ GLuint loadCubemap(std::vector<std::string> faces)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
+	//stbi_set_flip_vertically_on_load(false);
 	return textureID;
 }
