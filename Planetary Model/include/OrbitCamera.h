@@ -36,7 +36,7 @@ public:
 
     glm::mat4 GetViewMatrix() const
     {
-        return glm::lookAt(glm::vec3(x, y, z), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+        return glm::lookAt(glm::vec3(x, y, z), glm::vec3(18, 0, 0), glm::vec3(0, 1, 0));
     }
 
     // processes input received from a mouse input system. Expects the offset value in both the x and y direction.

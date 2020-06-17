@@ -71,7 +71,22 @@ int main()
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSwapInterval(1);
 	setCallbacks(window); //setup glfw window callbacks
+
+	GLFWimage images[1];
+	images[0].pixels = stbi_load("res/img/milky_way.jpg", &images[0].width, &images[0].height, 0, 4); //rgba channels 
+	if (images[0].pixels == nullptr)
+	{
+		std::cerr << "Failed to load icon" << std::endl;
+		stbi_image_free(images[0].pixels);
+	}
+	else
+	{
+		glfwSetWindowIcon(window, 1, images);
+		stbi_image_free(images[0].pixels);
+	}
+	
 
 	if (glewInit() != GLEW_OK)
 	{
@@ -186,8 +201,19 @@ int main()
 
 	Shader skyboxShader("res/shader/skybox.vs", "res/shader/skybox.fs");
 	Shader planetShader("res/shader/planetVertex.glsl", "res/shader/planetFragment.glsl");
-
-	Model ourModel("res/img/sphere.obj");
+	
+	Model sun("res/planets/sun/sphere.obj");
+	Model mercury("res/planets/mercury/sphere.obj");
+	Model venus("res/planets/venus/sphere.obj");
+	Model earth("res/planets/earth/sphere.obj");
+	Model moon("res/planets/moon/sphere.obj");
+	Model mars("res/planets/mars/sphere.obj");
+	Model jupiter("res/planets/jupiter/sphere.obj");
+	Model saturn("res/planets/saturn/sphere.obj");
+	Model uranus("res/planets/uranus/sphere.obj");
+	Model neptune("res/planets/neptune/sphere.obj");
+	
+	
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -205,11 +231,94 @@ int main()
 		
 		planetShader.use();
 
+		//sun
 		glm::mat4 model = glm::mat4(1.0);
+		model = glm::scale(model, glm::vec3(5, 5, 5));
+		model = glm::translate(model, glm::vec3(0,0,0));
 		planetShader.setMat4("model", model);
 		planetShader.setMat4("view", view);
 		planetShader.setMat4("projection", projection);
-		ourModel.Draw(planetShader);
+		sun.Draw(planetShader);
+		//mercury
+		model = glm::mat4(1.0);
+		model = glm::scale(model, glm::vec3(1, 1, 1));
+		model = glm::translate(model, glm::vec3(0 + 7, 0, 0));
+		planetShader.setMat4("model", model);
+		planetShader.setMat4("view", view);
+		planetShader.setMat4("projection", projection);
+		mercury.Draw(planetShader);
+
+		//venus
+		model = glm::mat4(1.0);
+		model = glm::scale(model, glm::vec3(1.25f, 1.25f, 1.25f));
+		model = glm::translate(model, glm::vec3(0 + 8.5, 0, 0));
+		planetShader.setMat4("model", model);
+		planetShader.setMat4("view", view);
+		planetShader.setMat4("projection", projection);
+		venus.Draw(planetShader);
+
+		//earth
+		model = glm::mat4(1.0);
+		model = glm::scale(model, glm::vec3(1.25f, 1.25f, 1.25f));
+		model = glm::translate(model, glm::vec3(0 + 11, 0, 0));
+		planetShader.setMat4("model", model);
+		planetShader.setMat4("view", view);
+		planetShader.setMat4("projection", projection);
+		earth.Draw(planetShader);
+
+		//moon
+		model = glm::mat4(1.0);
+		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+		model = glm::translate(model, glm::vec3(0 + 32, 0, 0));
+		planetShader.setMat4("model", model);
+		planetShader.setMat4("view", view);
+		planetShader.setMat4("projection", projection);
+		moon.Draw(planetShader);
+
+		//mars
+		model = glm::mat4(1.0);
+		model = glm::scale(model, glm::vec3(1, 1, 1));
+		model = glm::translate(model, glm::vec3(0 + 18, 0, 0));
+		planetShader.setMat4("model", model);
+		planetShader.setMat4("view", view);
+		planetShader.setMat4("projection", projection);
+		mars.Draw(planetShader);
+
+		//jupiter
+		model = glm::mat4(1.0);
+		model = glm::scale(model, glm::vec3(3, 3, 3));
+		model = glm::translate(model, glm::vec3(0 + 8, 0, 0));
+		planetShader.setMat4("model", model);
+		planetShader.setMat4("view", view);
+		planetShader.setMat4("projection", projection);
+		jupiter.Draw(planetShader);
+
+		//saturn
+		model = glm::mat4(1.0);
+		model = glm::scale(model, glm::vec3(3, 3, 3));
+		model = glm::translate(model, glm::vec3(0 + 11, 0, 0));
+		planetShader.setMat4("model", model);
+		planetShader.setMat4("view", view);
+		planetShader.setMat4("projection", projection);
+		saturn.Draw(planetShader);
+
+		//uranus
+		model = glm::mat4(1.0);
+		model = glm::scale(model, glm::vec3(2, 2, 2));
+		model = glm::translate(model, glm::vec3(0 + 21, 0, 0));
+		planetShader.setMat4("model", model);
+		planetShader.setMat4("view", view);
+		planetShader.setMat4("projection", projection);
+		uranus.Draw(planetShader);
+
+		//neptune
+		model = glm::mat4(1.0);
+		model = glm::scale(model, glm::vec3(2, 2, 2));
+		model = glm::translate(model, glm::vec3(0 + 24, 0, 0));
+		planetShader.setMat4("model", model);
+		planetShader.setMat4("view", view);
+		planetShader.setMat4("projection", projection);
+		neptune.Draw(planetShader);
 
 		/*planetShader.setMat4("model", model);
 		planetShader.setMat4("view", view);
